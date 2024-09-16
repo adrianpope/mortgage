@@ -1,3 +1,5 @@
+import numpy as np
+
 def monthly_payment(principal, apr, months):
     interest_per_month = apr/100.0/12.0
     return principal*interest_per_month/(1 - (1 + interest_per_month)**-months)
@@ -12,6 +14,38 @@ def loan_summary(principal, apr, months):
     print('interest    = %12s' % "{:,.2f}".format(interest) )
     print('total       = %12s' % "{:,.2f}".format(total) )
     print('intprin     = %13.3f' % (interest/principal) )
+    return
+
+def monthly_series(principal, apr, months, extra_per_month=0.0):
+    mp = monthly_payment(principal, apr, months)
+    interest_per_month = apr/100.0/12.0
+    principal_remaining = principal
+    interest_arr=np.zeros(months)
+    principal_arr=np.zeros(months)
+    remaining_arr=np.zeros(months)
+    for i in range(months):
+        interest_owed = principal_remaining*interest_per_month
+        interest_arr[i] = interest_owed
+        principal_paid = mp - interest_owed
+        principal_arr[i] = principal_paid
+        principal_remaining -= (principal_paid + extra_per_month)
+        remaining_arr[i] = principal_remaining
+        if principal_remaining < mp:
+            break
+    last_payment = principal_remaining*(1.0 + interest_per_month)
+    principal_arr[i] = principal_remaining
+    interest_arr[i] = principal_remaining*interest_per_month
+    months_arr = np.arange(months)
+    return (months_arr, principal_arr, interest_arr, remaining_arr)
+
+def crossover(series0, series1):
+    n0=len(series0)
+    n1=len(series1)
+    n=min(n0,n1)
+    for i in range(n-1):
+        if (series0[i] < series1[i]) != (series0[i+1] < series1[i+1]):
+            break
+    return i
 
 def loan_summary_extra_monthly(principal, apr, months, extra_per_month=0.0):
     mp = monthly_payment(principal, apr, months)
@@ -33,6 +67,7 @@ def loan_summary_extra_monthly(principal, apr, months, extra_per_month=0.0):
     print('total       = %12s' % "{:,.2f}".format(total) )
     print('savings     = %12s' % "{:,.2f}".format(mp*months - total) )
     print('int/prin    = %13.3f' % (interest/principal) )
+    return
 
 def loan_summary_extra_yearly(principal, apr, months, extra_per_year=0.0, first_extra_month=11):
     mp = monthly_payment(principal, apr, months)
@@ -61,3 +96,4 @@ def loan_summary_extra_yearly(principal, apr, months, extra_per_year=0.0, first_
     print('total       = %12s' % "{:,.2f}".format(total) )
     print('savings     = %12s' % "{:,.2f}".format(mp*months - total) )
     print('int/prin    = %13.3f' % (interest/principal) )
+    return
