@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.optimize as so
 
 def monthly_payment(principal, apr, months):
     interest_per_month = apr/100.0/12.0
@@ -68,6 +69,25 @@ def loan_summary_extra_monthly(principal, apr, months, extra_per_month=0.0):
     print('savings     = %12s' % "{:,.2f}".format(mp*months - total) )
     print('int/prin    = %13.3f' % (interest/principal) )
     return
+
+def loan_length_extra_monthly(principal, apr, months, extra_per_month=0.0):
+    mp = monthly_payment(principal, apr, months)
+    interest_per_month = apr/100.0/12.0
+    principal_remaining = principal
+    for i in range(months):
+        interest_owed = principal_remaining*interest_per_month
+        principal_paid = mp - interest_owed
+        principal_remaining -= (principal_paid + extra_per_month)
+        if principal_remaining < mp:
+            break
+    last_payment = principal_remaining*(1.0 + interest_per_month)
+    total = (i+1)*(mp + extra_per_month) + last_payment
+    interest = total - principal
+    return i+1+last_payment/mp
+
+def find_monthly_extra(principal, apr, months, payoff_month):
+    extra = so.brentq(lambda x:loan_length_extra_monthly(principal, apr, months, x) - payoff_month,0,10000)
+    return extra
 
 def loan_summary_extra_yearly(principal, apr, months, extra_per_year=0.0, first_extra_month=11):
     mp = monthly_payment(principal, apr, months)
