@@ -24,6 +24,7 @@ def monthly_series(principal, apr, months, extra_per_month=0.0):
     interest_arr=np.zeros(months)
     principal_arr=np.zeros(months)
     remaining_arr=np.zeros(months)
+    paid_arr=np.zeros(months)
     for i in range(months):
         interest_owed = principal_remaining*interest_per_month
         interest_arr[i] = interest_owed
@@ -31,13 +32,15 @@ def monthly_series(principal, apr, months, extra_per_month=0.0):
         principal_arr[i] = principal_paid
         principal_remaining -= (principal_paid + extra_per_month)
         remaining_arr[i] = principal_remaining
+        paid_arr[i] = (i+1)*mp
         if principal_remaining < mp:
             break
     last_payment = principal_remaining*(1.0 + interest_per_month)
     principal_arr[i] = principal_remaining
     interest_arr[i] = principal_remaining*interest_per_month
+    paid_arr[i:] = paid_arr[i-1] + last_payment
     months_arr = np.arange(months)
-    return (months_arr, principal_arr, interest_arr, remaining_arr)
+    return (months_arr, principal_arr, interest_arr, remaining_arr, paid_arr)
 
 def crossover(series0, series1):
     n0=len(series0)
