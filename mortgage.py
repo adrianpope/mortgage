@@ -37,9 +37,9 @@ def monthly_series(principal, apr, months, extra_per_month=0.0):
         if principal_remaining < (mp + extra_per_month):
             break
     last_payment = principal_remaining*(1.0 + interest_per_month)
-    principal_arr[i] = principal_remaining
-    interest_arr[i] = principal_remaining*interest_per_month
-    paid_arr[i:] = paid_arr[i-1] + last_payment
+    principal_arr[i+1] = principal_remaining
+    interest_arr[i+1] = principal_remaining*interest_per_month
+    paid_arr[i+1:] = paid_arr[i] + last_payment
     months_arr = np.arange(months)
     ret = {}
     ret['months'] = months_arr
