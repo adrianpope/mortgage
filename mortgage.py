@@ -49,6 +49,46 @@ def monthly_series(principal, apr, months, extra_per_month=0.0):
     ret['paid'] = paid_arr
     return ret
 
+def monthly_series_plus(principal, apr, months, extra_per_month=0.0, one_time_month=-1, one_time_amount=0, ee_month=0, ee_amount=0):
+    mp = monthly_payment(principal, apr, months)
+    interest_per_month = apr/100.0/12.0
+    principal_remaining = principal
+    interest_arr=np.zeros(months)
+    principal_arr=np.zeros(months)
+    remaining_arr=np.zeros(months)
+    paid_arr=np.zeros(months)
+    for i in range(months):
+        epm = extra_per_month
+        if i >= ee_month:
+            epm = epm + ee_amount
+        interest_owed = principal_remaining*interest_per_month
+        interest_arr[i] = interest_owed
+        principal_paid = mp - interest_owed
+        principal_arr[i] = principal_paid
+        principal_remaining -= (principal_paid + epm)
+        if i == 0:
+            paid_arr[i] = mp + epm
+        else:
+            paid_arr[i] = paid_arr[i-1] + mp + epm
+        if i == one_time_month:
+            paid_arr[i] += one_time_amount
+            principal_remaining -= one_time_amount
+        remaining_arr[i] = principal_remaining
+        if principal_remaining < (mp + epm):
+            break
+    last_payment = principal_remaining*(1.0 + interest_per_month)
+    principal_arr[i+1] = principal_remaining
+    interest_arr[i+1] = principal_remaining*interest_per_month
+    paid_arr[i+1:] = paid_arr[i] + last_payment
+    months_arr = np.arange(months)
+    ret = {}
+    ret['months'] = months_arr
+    ret['principal'] = principal_arr
+    ret['interest'] = interest_arr
+    ret['remaining'] = remaining_arr
+    ret['paid'] = paid_arr
+    return ret
+
 def crossover(series0, series1, series1_start=0):
     r0 = series0['remaining']
     r1 = series1['remaining']
@@ -64,7 +104,15 @@ def crossover(series0, series1, series1_start=0):
             break
     return i0
 
-def plot_remaining(series0, series1, series1_start=0):
+def plot_remaining(series, start_months=0, lbl='series'):
+    plt.plot( (series['months'] + start_months)/12.0, series['remaining']/1000.0,label=lbl)
+    plt.xlabel('years')
+    plt.ylabel('principal remaining ($1000)')
+    #plt.legend()
+    #plt.show()
+    return
+
+def plot_remaining_2(series0, series1, series1_start=0):
     plt.plot(series0['months']/12.0, series0['remaining']/1000.0,label='series0')
     plt.plot((series1['months'] + series1_start)/12.0, series1['remaining']/1000.0,label='series1')
     plt.xlabel('years')
@@ -73,7 +121,15 @@ def plot_remaining(series0, series1, series1_start=0):
     plt.show()
     return
 
-def plot_paid(series0, series1, series1_start=0, series1_dc=0.0):
+def plot_paid(series, start_months=0, offset=0.0, lbl='series'):
+    plt.plot((series['months'] + start_months)/12.0, (series['paid'] + offset)/1000.0,label=lbl)
+    plt.xlabel('years')
+    plt.ylabel('total paid ($1000)')
+    #plt.legend()
+    #plt.show()
+    return
+
+def plot_paid_2(series0, series1, series1_start=0, series1_dc=0.0):
     plt.plot(series0['months']/12.0, series0['paid']/1000.0,label='series0')
     plt.plot((series1['months'] + series1_start)/12.0, (series1['paid'] + series1_dc)/1000.0,label='series1')
     plt.xlabel('years')
@@ -81,7 +137,7 @@ def plot_paid(series0, series1, series1_start=0, series1_dc=0.0):
     plt.legend()
     plt.show()
     return
-    
+
 def loan_summary_extra_monthly(principal, apr, months, extra_per_month=0.0):
     mp = monthly_payment(principal, apr, months)
     interest_per_month = apr/100.0/12.0
